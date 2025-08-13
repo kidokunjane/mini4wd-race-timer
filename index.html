@@ -21,41 +21,34 @@
     </header>
 
     <main>
-      <!-- Select View -->
-      <section id="select-view" class="view active">
-        <div class="card">
-          <h2>動画を選択</h2>
-          <p class="muted">フォトライブラリからレース動画を選択してください。</p>
-          <label class="file-picker">
-            <input id="videoInput" type="file" accept="video/*" />
-            <span>動画ファイルを選択</span>
-          </label>
-          <button id="goToPlayerBtn" class="primary" disabled>再生画面へ</button>
-        </div>
-      </section>
-
-      <!-- Player View -->
-      <section id="player-view" class="view">
+      <!-- Player (計測) View only -->
+      <section id="player-view" class="view active">
         <div class="player">
           <div class="left-pane">
             <div class="video-wrap">
               <video id="video" playsinline></video>
+              <div id="placeholder" class="placeholder">
+                <div class="ph-inner">
+                  <div class="ph-icon" aria-hidden="true">🎞️</div>
+                  <div class="ph-text">動画が選択されていません</div>
+                  <button id="openPickerBtn" class="primary">動画を選択</button>
+                </div>
+              </div>
             </div>
             <div class="video-seek">
               <input id="seekBar" class="seek" type="range" min="0" value="0" step="0.01" aria-label="シークバー" />
             </div>
           </div>
           <div class="right-pane">
+            <div class="picker">
+              <label class="file-picker">
+                <input id="videoInput" type="file" accept="video/*" />
+                <span>動画ファイルを選択</span>
+              </label>
+            </div>
             <div class="control-buttons">
               <button id="playPauseBtn" class="control primary">再生/一時停止</button>
               <button id="restartBtn" class="control ghost-contrast">最初から再生</button>
-            </div>
-            <div class="haptics">
-              <label class="h-switch">
-                <input type="checkbox" id="hapticsToggle" />
-                <span>バイブレーション（擬似含む）</span>
-              </label>
-              <small id="hapticsNote" class="muted"></small>
             </div>
             <div class="stopwatch">
               <div id="timeDisplay" class="time">00:00.000</div>
@@ -65,9 +58,6 @@
                 <button id="resetBtn" class="ghost" disabled>リセット</button>
               </div>
             </div>
-            <div class="nav">
-              <button id="backBtn" class="ghost">戻る</button>
-            </div>
           </div>
         </div>
       </section>
@@ -75,5 +65,7 @@
 
     <script src="app-version.js"></script>
     <script type="module" src="app.js"></script>
+    <!-- iOS擬似ハプティクス用の非表示トグル -->
+    <input id="iosHapticSwitch" type="checkbox" aria-hidden="true" tabindex="-1" class="ios-haptic-switch" />
   </body>
   </html>

@@ -2,11 +2,8 @@ let selectedVideoURL = null;
 let beforeInstallPromptEvent = null;
 
 // DOM elements
-const selectView = document.getElementById('select-view');
 const playerView = document.getElementById('player-view');
 const videoInput = document.getElementById('videoInput');
-const goToPlayerBtn = document.getElementById('goToPlayerBtn');
-const backBtn = document.getElementById('backBtn');
 const videoEl = document.getElementById('video');
 const playPauseBtn = document.getElementById('playPauseBtn');
 const restartBtn = document.getElementById('restartBtn');
@@ -21,8 +18,12 @@ const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
 const installBtn = document.getElementById('installBtn');
 const versionBadge = document.getElementById('versionBadge');
-const hapticsToggle = document.getElementById('hapticsToggle');
-const hapticsNote = document.getElementById('hapticsNote');
+// Haptics elements removed (always ON)
+const placeholder = document.getElementById('placeholder');
+const openPickerBtn = document.getElementById('openPickerBtn');
+// iOS判定と擬似ハプティクス用トグル
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const iosHapticSwitch = document.getElementById('iosHapticSwitch');
 
 // Stopwatch state
 let isRunning = false;
@@ -78,51 +79,27 @@ function resetTimer() {
   resetBtn.disabled = true;
 }
 
-// File selection and navigation
-videoInput.addEventListener('change', () => {
-  const file = videoInput.files && videoInput.files[0];
-  if (file) {
-    if (selectedVideoURL) URL.revokeObjectURL(selectedVideoURL);
-    selectedVideoURL = URL.createObjectURL(file);
-    goToPlayerBtn.disabled = false;
-    // 自動で再生画面に遷移し、可能なら再生を試みる
-    videoEl.src = selectedVideoURL;
-    switchView('player');
-    // 一部のブラウザでは自動再生がブロックされる可能性あり
-    Promise.resolve().then(() => videoEl.play()).catch(() => {});
-  } else {
-    goToPlayerBtn.disabled = true;
-  }
-});
-
-goToPlayerBtn.addEventListener('click', () => {
-  if (!selectedVideoURL) return;
-  videoEl.src = selectedVideoURL;
-  switchView('player');
-});
-
-backBtn.addEventListener('click', () => {
-  // Stop video and reset stopwatch on back
-  try { videoEl.pause(); } catch {}
-  resetTimer();
-  switchView('select');
-});
-
-function switchView(view) {
-  if (view === 'player') {
-    selectView.classList.remove('active');
-    playerView.classList.add('active');
-    document.body.classList.add('player-mode');
-    // レイアウトを更新
-    requestAnimationFrame(resizeVideoArea);
-    // 可能なら横画面にロック
-    tryLockLandscape();
-  } else {
-    playerView.classList.remove('active');
-    selectView.classList.add('active');
-    document.body.classList.remove('player-mode');
-  }
+// File selection (in single measurement view)
+if (videoInput) {
+  videoInput.addEventListener('change', () => {
+    const file = videoInput.files && videoInput.files[0];
+    if (file) {
+      if (selectedVideoURL) URL.revokeObjectURL(selectedVideoURL);
+      selectedVideoURL = URL.createObjectURL(file);
+      videoEl.src = selectedVideoURL;
+      Promise.resolve().then(() => videoEl.play()).catch(() => {});
+      requestAnimationFrame(resizeVideoArea);
+      if (placeholder) placeholder.hidden = true;
+    }
+  });
 }
+
+// Placeholder open picker
+openPickerBtn?.addEventListener('click', () => videoInput?.click());
+
+// Single-view mode: ensure player layout
+document.body.classList.add('player-mode');
+requestAnimationFrame(resizeVideoArea);
 
 // Video controls
 playPauseBtn.addEventListener('click', async () => {
@@ -149,6 +126,7 @@ function setupSeekbarBindings() {
     if (isFinite(videoEl.duration)) {
       seekBar.max = String(videoEl.duration);
     }
+    if (placeholder && videoEl.currentSrc) placeholder.hidden = true;
   });
 
   // 再生位置の更新に追従
@@ -156,6 +134,10 @@ function setupSeekbarBindings() {
     if (!isNaN(videoEl.currentTime)) {
       seekBar.value = String(videoEl.currentTime);
     }
+  });
+
+  videoEl.addEventListener('error', () => {
+    if (placeholder) placeholder.hidden = false;
   });
 
   // ユーザー操作でシーク
@@ -247,7 +229,6 @@ try {
 
 // Haptics (vibrate or pseudo via Web Audio)
 const canVibrate = 'vibrate' in navigator;
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 let audioCtx = null;
 function ensureAudioContext() {
   if (!audioCtx) {
@@ -289,7 +270,16 @@ function playPattern(pattern) {
 }
 
 function haptic(pattern) {
-  if (!hapticsToggle?.checked) return;
+  if (isIOS && iosHapticSwitch) {
+    const pulses = Array.isArray(pattern) ? Math.ceil(pattern.length / 2) : 1;
+    const interval = 60;
+    for (let i = 0; i < pulses; i++) {
+      setTimeout(() => {
+        iosHapticSwitch.click();
+      }, i * interval);
+    }
+    return;
+  }
   if (canVibrate) {
     try { navigator.vibrate(pattern); } catch {}
   } else {
@@ -314,26 +304,4 @@ function hapticFeedback(kind) {
   }
 }
 
-// Haptics toggle persistence and note
-const HAPTICS_KEY = 'hapticsEnabled';
-try {
-  const saved = localStorage.getItem(HAPTICS_KEY);
-  const initial = saved == null ? true : saved === 'true';
-  if (hapticsToggle) hapticsToggle.checked = initial;
-} catch {}
-if (hapticsToggle) {
-  hapticsToggle.addEventListener('change', () => {
-    try { localStorage.setItem(HAPTICS_KEY, hapticsToggle.checked ? 'true' : 'false'); } catch {}
-    // Start/resume audio context on first enable via user gesture
-    if (hapticsToggle.checked) ensureAudioContext();
-  });
-}
-if (hapticsNote) {
-  if (canVibrate) {
-    hapticsNote.textContent = '対応端末ではネイティブ振動を使用します。';
-  } else if (isIOS) {
-    hapticsNote.textContent = 'iOSでは短いサウンドで擬似バイブを再現します。音量にご注意ください。';
-  } else {
-    hapticsNote.textContent = '振動非対応のため疑似バイブを使用します。';
-  }
-}
+// Haptics default ON; ensure audio context will start on first user gesture
