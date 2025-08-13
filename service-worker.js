@@ -1,4 +1,4 @@
-/* Service worker with immediate update and GitHub Pages subpath support */
+/* Service worker with update prompt flow and GitHub Pages subpath support */
 // Share version between app and SW
 try { importScripts('./app-version.js'); } catch (e) {}
 const VERSION = (typeof self !== 'undefined' && self.APP_VERSION) ? self.APP_VERSION : 'v0.0.0';
@@ -17,8 +17,7 @@ const APP_SHELL = ASSETS.map((p) => new URL(`./${p}`, self.location).toString())
 const INDEX_URL = new URL('./index.html', self.location).toString();
 
 self.addEventListener('install', (event) => {
-  // Activate new SW immediately after install
-  self.skipWaiting();
+  // Do not call skipWaiting here; wait for user consent
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
@@ -52,5 +51,12 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(request).then((cached) => cached || fetch(request))
     );
+  }
+});
+
+// Allow page to request immediate activation of the waiting worker
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });

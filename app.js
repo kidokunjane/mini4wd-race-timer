@@ -212,16 +212,16 @@ if ('serviceWorker' in navigator) {
   const reloadBtn = document.getElementById('reloadBtn');
   const dismissUpdateBtn = document.getElementById('dismissUpdateBtn');
 
-  function showUpdateToast() {
-    if (updateToast) updateToast.hidden = false;
-  }
-  function hideUpdateToast() {
-    if (updateToast) updateToast.hidden = true;
-  }
+  function showUpdateToast() { if (updateToast) updateToast.hidden = false; }
+  function hideUpdateToast() { if (updateToast) updateToast.hidden = true; }
 
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js').then((reg) => {
-      // If there's an update ready (installed) while controller exists
+      // Show prompt only when a new worker is waiting
+      function promptUpdate() {
+        if (reg.waiting) showUpdateToast();
+      }
+
       if (reg.waiting && navigator.serviceWorker.controller) {
         showUpdateToast();
       }
@@ -231,22 +231,28 @@ if ('serviceWorker' in navigator) {
         if (!sw) return;
         sw.addEventListener('statechange', () => {
           if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-            showUpdateToast();
+            // New SW installed, waiting for activation → ask user
+            promptUpdate();
           }
         });
       });
 
-      let refreshing = false;
+      let shouldReloadOnControllerChange = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return;
-        refreshing = true;
-        // New SW took control; prompt user to reload
-        showUpdateToast();
+        if (!shouldReloadOnControllerChange) return;
+        // New SW took control after user accepted update
+        window.location.reload();
       });
 
       reloadBtn?.addEventListener('click', () => {
-        hideUpdateToast();
-        location.reload();
+        // Tell the waiting SW to activate immediately
+        if (reg.waiting) {
+          shouldReloadOnControllerChange = true;
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        } else {
+          // Fallback: no waiting worker; just reload
+          window.location.reload();
+        }
       });
       dismissUpdateBtn?.addEventListener('click', () => hideUpdateToast());
     }).catch(() => {});
