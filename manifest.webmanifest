@@ -1,0 +1,18 @@
+{
+  "name": "Mini4WD Race Timer",
+  "short_name": "RaceTimer",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#0ea5e9",
+  "description": "フォトライブラリの動画を再生しながらストップウォッチでタイム計測",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
