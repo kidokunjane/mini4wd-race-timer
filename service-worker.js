@@ -1,5 +1,5 @@
 /* Service worker with immediate update and GitHub Pages subpath support */
-const CACHE_NAME = 'mini4wd-race-timer-v6';
+const CACHE_NAME = 'mini4wd-race-timer-v7';
 
 // Build absolute URLs so it works under a subpath scope (e.g., /user/repo/)
 const ASSETS = [

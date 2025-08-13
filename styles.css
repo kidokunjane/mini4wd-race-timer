@@ -73,6 +73,16 @@ input[type="range"].seek::-moz-range-thumb { width: 16px; height: 16px; border-r
 
 .nav { display: flex; justify-content: flex-end; }
 
+/* Update toast */
+.toast {
+  position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: #ffffff; color: var(--text); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+.toast-actions { display: flex; gap: 8px; }
+
 @media (min-width: 720px) {
   .player { grid-template-columns: 2fr 1fr; align-items: start; }
   .stopwatch { position: sticky; top: 12px; }

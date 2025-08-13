@@ -205,10 +205,50 @@ installBtn.addEventListener('click', async () => {
   beforeInstallPromptEvent = null;
 });
 
-// Service worker registration
+// Service worker registration with update notification
 if ('serviceWorker' in navigator) {
+  const updateToast = document.getElementById('updateToast');
+  const reloadBtn = document.getElementById('reloadBtn');
+  const dismissUpdateBtn = document.getElementById('dismissUpdateBtn');
+
+  function showUpdateToast() {
+    if (updateToast) updateToast.hidden = false;
+  }
+  function hideUpdateToast() {
+    if (updateToast) updateToast.hidden = true;
+  }
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+    navigator.serviceWorker.register('./service-worker.js').then((reg) => {
+      // If there's an update ready (installed) while controller exists
+      if (reg.waiting && navigator.serviceWorker.controller) {
+        showUpdateToast();
+      }
+
+      reg.addEventListener('updatefound', () => {
+        const sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener('statechange', () => {
+          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateToast();
+          }
+        });
+      });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        // New SW took control; prompt user to reload
+        showUpdateToast();
+      });
+
+      reloadBtn?.addEventListener('click', () => {
+        hideUpdateToast();
+        location.reload();
+      });
+      dismissUpdateBtn?.addEventListener('click', () => hideUpdateToast());
+    }).catch(() => {});
   });
 }
 
