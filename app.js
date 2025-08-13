@@ -108,11 +108,13 @@ function switchView(view) {
   if (view === 'player') {
     selectView.classList.remove('active');
     playerView.classList.add('active');
+    document.body.classList.add('player-mode');
     // レイアウトを更新
     requestAnimationFrame(resizeVideoArea);
   } else {
     playerView.classList.remove('active');
     selectView.classList.add('active');
+    document.body.classList.remove('player-mode');
   }
 }
 
