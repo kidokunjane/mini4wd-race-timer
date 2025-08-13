@@ -1,39 +1,44 @@
-/* Minimal service worker for offline shell caching */
-const CACHE_NAME = 'mini4wd-race-timer-v3';
-const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/app.js',
-  '/manifest.webmanifest',
-  '/icons/icon.svg'
+/* Service worker with immediate update and GitHub Pages subpath support */
+const CACHE_NAME = 'mini4wd-race-timer-v5';
+
+// Build absolute URLs so it works under a subpath scope (e.g., /user/repo/)
+const ASSETS = [
+  'index.html',
+  'styles.css',
+  'app.js',
+  'manifest.webmanifest',
+  'icons/icon.svg'
 ];
+const APP_SHELL = ASSETS.map((p) => new URL(`./${p}`, self.location).toString());
+const INDEX_URL = new URL('./index.html', self.location).toString();
 
 self.addEventListener('install', (event) => {
+  // Activate new SW immediately after install
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Do not try to cache blob/object URLs
-  if (request.url.startsWith('blob:')) return;
+  // Ignore non-HTTP(S) requests like blob: or data:
+  if (!/^https?:/.test(request.url)) return;
 
-  // Navigation requests: provide shell for SPA
+  // Navigation requests: network first, fallback to cached index
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('/index.html'))
+      fetch(request).catch(() => caches.match(INDEX_URL))
     );
     return;
   }
@@ -45,4 +50,3 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
-
