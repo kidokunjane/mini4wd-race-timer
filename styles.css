@@ -112,3 +112,7 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
   .control-buttons button, .stopwatch, .nav { width: 100%; }
   .time { font-size: 56px; }
 }
+
+.haptics { display: grid; gap: 6px; }
+.h-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.h-switch input { width: 18px; height: 18px; }

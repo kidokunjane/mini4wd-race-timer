@@ -21,6 +21,8 @@ const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
 const installBtn = document.getElementById('installBtn');
 const versionBadge = document.getElementById('versionBadge');
+const hapticsToggle = document.getElementById('hapticsToggle');
+const hapticsNote = document.getElementById('hapticsNote');
 
 // Stopwatch state
 let isRunning = false;
@@ -54,6 +56,7 @@ function startTimer() {
   startBtn.disabled = true;
   stopBtn.disabled = false;
   resetBtn.disabled = true;
+  hapticFeedback('start');
 }
 
 function stopTimer() {
@@ -64,6 +67,7 @@ function stopTimer() {
   startBtn.disabled = false;
   stopBtn.disabled = true;
   resetBtn.disabled = false;
+  hapticFeedback('stop');
 }
 
 function resetTimer() {
@@ -135,6 +139,7 @@ restartBtn.addEventListener('click', async () => {
   videoEl.currentTime = 0;
   try { await videoEl.play(); } catch {}
   tryLockLandscape();
+  hapticFeedback('restart');
 });
 
 // Seek bar
@@ -195,6 +200,7 @@ stopBtn.addEventListener('click', () => {
 
 resetBtn.addEventListener('click', () => {
   resetTimer();
+  hapticFeedback('reset');
 });
 
 // 可能なら横画面にロック（ユーザー操作起点で呼び出すと成功しやすい）
@@ -238,3 +244,96 @@ try {
   const v = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : undefined;
   if (v && versionBadge) versionBadge.textContent = v;
 } catch {}
+
+// Haptics (vibrate or pseudo via Web Audio)
+const canVibrate = 'vibrate' in navigator;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let audioCtx = null;
+function ensureAudioContext() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function buzz(durationMs = 30) {
+  ensureAudioContext();
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = 120; // low buzz
+  const now = audioCtx.currentTime;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.25, now + 0.005);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + durationMs / 1000 + 0.02);
+}
+
+function playPattern(pattern) {
+  if (Array.isArray(pattern)) {
+    let t = 0;
+    pattern.forEach((seg, i) => {
+      if (i % 2 === 0) {
+        // on segment
+        setTimeout(() => buzz(seg), t);
+      }
+      t += seg;
+    });
+  } else {
+    buzz(typeof pattern === 'number' ? pattern : 30);
+  }
+}
+
+function haptic(pattern) {
+  if (!hapticsToggle?.checked) return;
+  if (canVibrate) {
+    try { navigator.vibrate(pattern); } catch {}
+  } else {
+    playPattern(pattern);
+  }
+}
+
+function hapticFeedback(kind) {
+  switch (kind) {
+    case 'start':
+      haptic([40]); // single short
+      break;
+    case 'stop':
+      haptic([50, 40, 50]); // double pulse
+      break;
+    case 'restart':
+      haptic([30, 30, 30]);
+      break;
+    case 'reset':
+      haptic(20);
+      break;
+  }
+}
+
+// Haptics toggle persistence and note
+const HAPTICS_KEY = 'hapticsEnabled';
+try {
+  const saved = localStorage.getItem(HAPTICS_KEY);
+  const initial = saved == null ? true : saved === 'true';
+  if (hapticsToggle) hapticsToggle.checked = initial;
+} catch {}
+if (hapticsToggle) {
+  hapticsToggle.addEventListener('change', () => {
+    try { localStorage.setItem(HAPTICS_KEY, hapticsToggle.checked ? 'true' : 'false'); } catch {}
+    // Start/resume audio context on first enable via user gesture
+    if (hapticsToggle.checked) ensureAudioContext();
+  });
+}
+if (hapticsNote) {
+  if (canVibrate) {
+    hapticsNote.textContent = '対応端末ではネイティブ振動を使用します。';
+  } else if (isIOS) {
+    hapticsNote.textContent = 'iOSでは短いサウンドで擬似バイブを再現します。音量にご注意ください。';
+  } else {
+    hapticsNote.textContent = '振動非対応のため疑似バイブを使用します。';
+  }
+}
