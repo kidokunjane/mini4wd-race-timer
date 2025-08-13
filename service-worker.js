@@ -1,11 +1,15 @@
 /* Service worker with immediate update and GitHub Pages subpath support */
-const CACHE_NAME = 'mini4wd-race-timer-v7';
+// Share version between app and SW
+try { importScripts('./app-version.js'); } catch (e) {}
+const VERSION = (typeof self !== 'undefined' && self.APP_VERSION) ? self.APP_VERSION : 'v0.0.0';
+const CACHE_NAME = `mini4wd-race-timer-${VERSION}`;
 
 // Build absolute URLs so it works under a subpath scope (e.g., /user/repo/)
 const ASSETS = [
   'index.html',
   'styles.css',
   'app.js',
+  'app-version.js',
   'manifest.webmanifest',
   'icons/icon.svg'
 ];

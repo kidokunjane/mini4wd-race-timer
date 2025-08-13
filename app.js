@@ -20,6 +20,7 @@ const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
 const installBtn = document.getElementById('installBtn');
+const versionBadge = document.getElementById('versionBadge');
 
 // Stopwatch state
 let isRunning = false;
@@ -254,3 +255,9 @@ if ('serviceWorker' in navigator) {
 
 // Initial UI state
 renderTime();
+
+// Show app version if available
+try {
+  const v = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : undefined;
+  if (v && versionBadge) versionBadge.textContent = v;
+} catch {}
