@@ -22,12 +22,18 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 16px; background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(6px); border-bottom: 1px solid var(--border);
+  padding-top: calc(12px + env(safe-area-inset-top));
 }
 .app-header h1 { font-size: 18px; margin: 0; }
 
 /* app-footer は削除済み */
 
-main { padding: 16px; max-width: 960px; margin: 0 auto; }
+main {
+  padding: 16px; max-width: 960px; margin: 0 auto;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  padding-left: calc(16px + env(safe-area-inset-left));
+  padding-right: calc(16px + env(safe-area-inset-right));
+}
 .view { display: none; }
 .view.active { display: block; }
 
@@ -50,8 +56,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .player { display: grid; gap: 16px; }
 .video-wrap { position: relative; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
 video { width: 100%; height: auto; display: block; background: #000; }
-.controls-overlay { position: absolute; left: 0; right: 0; bottom: 8px; display: flex; justify-content: center; gap: 8px; }
-.control { background: rgba(37, 99, 235, 0.95); color: white; border: 1px solid rgba(255,255,255,0.15); }
+.control { background: rgba(37, 99, 235, 0.95); color: white; border: 1px solid rgba(0,0,0,0.05); }
+
+.video-controls { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
 
 .stopwatch { display: grid; gap: 10px; justify-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
 .time { font-variant-numeric: tabular-nums; font-size: 40px; letter-spacing: 1px; }

@@ -1,5 +1,5 @@
 /* Minimal service worker for offline shell caching */
-const CACHE_NAME = 'mini4wd-race-timer-v2';
+const CACHE_NAME = 'mini4wd-race-timer-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
