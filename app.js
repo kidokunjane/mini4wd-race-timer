@@ -111,6 +111,8 @@ function switchView(view) {
     document.body.classList.add('player-mode');
     // レイアウトを更新
     requestAnimationFrame(resizeVideoArea);
+    // 可能なら横画面にロック
+    tryLockLandscape();
   } else {
     playerView.classList.remove('active');
     selectView.classList.add('active');
@@ -132,6 +134,7 @@ restartBtn.addEventListener('click', async () => {
   try { videoEl.pause(); } catch {}
   videoEl.currentTime = 0;
   try { await videoEl.play(); } catch {}
+  tryLockLandscape();
 });
 
 // Seek bar
@@ -167,7 +170,7 @@ function resizeVideoArea() {
   const pb = parseFloat(mainStyles.paddingBottom) || 0;
   const controlsH = (videoSeekContainer && videoSeekContainer.offsetHeight) || 0;
   const headerH = appHeader.offsetHeight || 0;
-  const vh = window.innerHeight;
+  const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
   const margins = 8; // .video-controls margin-top
   const available = Math.max(240, vh - headerH - pt - pb - controlsH - margins);
   videoWrap.style.height = available + 'px';
@@ -183,6 +186,7 @@ startBtn.addEventListener('click', () => {
     videoEl.play().catch(() => {});
   }
   startTimer();
+  tryLockLandscape();
 });
 
 stopBtn.addEventListener('click', () => {
@@ -192,6 +196,17 @@ stopBtn.addEventListener('click', () => {
 resetBtn.addEventListener('click', () => {
   resetTimer();
 });
+
+// 可能なら横画面にロック（ユーザー操作起点で呼び出すと成功しやすい）
+async function tryLockLandscape() {
+  const api = screen.orientation && screen.orientation.lock;
+  if (!api) return; // 非対応（iOS Safari等）は何もしない
+  try {
+    await screen.orientation.lock('landscape');
+  } catch (_) {
+    // フルスクリーンが必要な環境や権限不足では失敗することがあります
+  }
+}
 
 // PWA install prompt handling
 window.addEventListener('beforeinstallprompt', (e) => {

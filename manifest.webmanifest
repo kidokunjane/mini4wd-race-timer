@@ -6,6 +6,7 @@
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "description": "フォトライブラリの動画を再生しながらストップウォッチでタイム計測",
+  "orientation": "landscape",
   "icons": [
     {
       "src": "icons/icon.svg",
