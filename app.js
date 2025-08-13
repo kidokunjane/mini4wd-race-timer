@@ -19,8 +19,7 @@ const resetBtn = document.getElementById('resetBtn');
 const installBtn = document.getElementById('installBtn');
 const versionBadgeFloat = document.getElementById('versionBadgeFloat');
 // Haptics elements removed (always ON)
-const placeholder = document.getElementById('placeholder');
-const openPickerBtn = document.getElementById('openPickerBtn');
+// placeholder UI removed
 // iOS判定と擬似ハプティクス用トグル
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const iosHapticSwitch = document.getElementById('iosHapticSwitch');
@@ -87,19 +86,16 @@ if (videoInput) {
       if (selectedVideoURL) URL.revokeObjectURL(selectedVideoURL);
       selectedVideoURL = URL.createObjectURL(file);
       try { videoEl.pause(); } catch {}
-      videoEl.src = '';
+      videoEl.removeAttribute('src');
       videoEl.src = selectedVideoURL;
       try { videoEl.load(); } catch {}
-      // 再生はユーザー操作必要な場合があるため試行のみ
       Promise.resolve().then(() => videoEl.play()).catch(() => {});
       requestAnimationFrame(resizeVideoArea);
-      if (placeholder) placeholder.hidden = true;
     }
   });
 }
 
-// Placeholder open picker
-openPickerBtn?.addEventListener('click', () => videoInput?.click());
+// Placeholder removed
 
 // Single-view mode: ensure player layout
 document.body.classList.add('player-mode');
@@ -130,7 +126,6 @@ function setupSeekbarBindings() {
     if (isFinite(videoEl.duration)) {
       seekBar.max = String(videoEl.duration);
     }
-    if (placeholder && videoEl.currentSrc) placeholder.hidden = true;
   });
 
   // 再生位置の更新に追従
@@ -141,7 +136,7 @@ function setupSeekbarBindings() {
   });
 
   videoEl.addEventListener('error', () => {
-    if (placeholder) placeholder.hidden = false;
+    // keep UI as-is; user can reselect
   });
 
   // ユーザー操作でシーク

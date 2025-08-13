@@ -55,11 +55,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 video { width: 100%; height: 100%; display: block; background: #000; object-fit: contain; }
 .control { background: rgba(37, 99, 235, 0.95); color: white; border: 1px solid rgba(0,0,0,0.05); }
 
-/* プレースホルダー */
-.placeholder { position: absolute; inset: 0; display: grid; place-items: center; }
-.placeholder .ph-inner { display: grid; gap: 10px; justify-items: center; text-align: center; color: #fff; }
-.placeholder .ph-icon { font-size: 40px; opacity: 0.9; }
-.placeholder .ph-text { font-size: 14px; opacity: 0.85; }
+/* 右カラムの幅溢れ対策 */
+.picker { display: grid; }
+.file-picker { width: 100%; justify-content: center; }
 
 .video-seek { margin-top: 8px; }
 .video-seek .seek { width: 100%; }
@@ -96,10 +94,11 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
     position: sticky; top: calc(8px + env(safe-area-inset-top)); align-self: start;
     max-height: calc(100dvh - (8px + env(safe-area-inset-top)) - (8px + env(safe-area-inset-bottom)));
     overflow-y: auto; overflow-x: hidden; display: grid; gap: 12px; grid-auto-rows: min-content;
-    width: 100%;
+    width: 100%; max-width: 100%; box-sizing: border-box;
   }
   .control-buttons { display: grid; grid-template-columns: 1fr; gap: 10px; }
-  .control-buttons button, .stopwatch, .nav { width: 100%; }
+  .control-buttons button, .stopwatch, .nav, .picker { width: 100%; min-width: 0; }
+  .right-pane > * { min-width: 0; }
   .time { font-size: 56px; }
 }
 
