@@ -9,6 +9,7 @@ const goToPlayerBtn = document.getElementById('goToPlayerBtn');
 const backBtn = document.getElementById('backBtn');
 const videoEl = document.getElementById('video');
 const playPauseBtn = document.getElementById('playPauseBtn');
+const restartBtn = document.getElementById('restartBtn');
 const timeDisplay = document.getElementById('timeDisplay');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
@@ -74,6 +75,11 @@ videoInput.addEventListener('change', () => {
     if (selectedVideoURL) URL.revokeObjectURL(selectedVideoURL);
     selectedVideoURL = URL.createObjectURL(file);
     goToPlayerBtn.disabled = false;
+    // 自動で再生画面に遷移し、可能なら再生を試みる
+    videoEl.src = selectedVideoURL;
+    switchView('player');
+    // 一部のブラウザでは自動再生がブロックされる可能性あり
+    Promise.resolve().then(() => videoEl.play()).catch(() => {});
   } else {
     goToPlayerBtn.disabled = true;
   }
@@ -109,6 +115,13 @@ playPauseBtn.addEventListener('click', async () => {
   } else {
     videoEl.pause();
   }
+});
+
+restartBtn.addEventListener('click', async () => {
+  if (!videoEl.src) return;
+  try { videoEl.pause(); } catch {}
+  videoEl.currentTime = 0;
+  try { await videoEl.play(); } catch {}
 });
 
 // Stopwatch controls
@@ -152,4 +165,3 @@ if ('serviceWorker' in navigator) {
 
 // Initial UI state
 renderTime();
-
