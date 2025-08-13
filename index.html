@@ -12,13 +12,6 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="app-header">
-      <h1>Mini4WD Race Timer</h1>
-      <div class="header-actions">
-        <span id="versionBadge" class="badge" aria-label="バージョン"></span>
-        <button id="installBtn" class="ghost" hidden>インストール</button>
-      </div>
-    </header>
 
     <main>
       <!-- Player (計測) View only -->
@@ -62,6 +55,7 @@
         </div>
       </section>
     </main>
+    <div id="versionBadgeFloat" class="version-fab" aria-label="バージョン"></div>
 
     <script src="app-version.js"></script>
     <script type="module" src="app.js"></script>

@@ -17,7 +17,7 @@ const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
 const installBtn = document.getElementById('installBtn');
-const versionBadge = document.getElementById('versionBadge');
+const versionBadgeFloat = document.getElementById('versionBadgeFloat');
 // Haptics elements removed (always ON)
 const placeholder = document.getElementById('placeholder');
 const openPickerBtn = document.getElementById('openPickerBtn');
@@ -86,7 +86,11 @@ if (videoInput) {
     if (file) {
       if (selectedVideoURL) URL.revokeObjectURL(selectedVideoURL);
       selectedVideoURL = URL.createObjectURL(file);
+      try { videoEl.pause(); } catch {}
+      videoEl.src = '';
       videoEl.src = selectedVideoURL;
+      try { videoEl.load(); } catch {}
+      // 再生はユーザー操作必要な場合があるため試行のみ
       Promise.resolve().then(() => videoEl.play()).catch(() => {});
       requestAnimationFrame(resizeVideoArea);
       if (placeholder) placeholder.hidden = true;
@@ -156,7 +160,7 @@ function resizeVideoArea() {
   const pt = parseFloat(mainStyles.paddingTop) || 0;
   const pb = parseFloat(mainStyles.paddingBottom) || 0;
   const controlsH = (videoSeekContainer && videoSeekContainer.offsetHeight) || 0;
-  const headerH = appHeader.offsetHeight || 0;
+  const headerH = appHeader ? (appHeader.offsetHeight || 0) : 0;
   const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
   const margins = 8; // .video-controls margin-top
   const available = Math.max(240, vh - headerH - pt - pb - controlsH - margins);
@@ -196,19 +200,10 @@ async function tryLockLandscape() {
   }
 }
 
-// PWA install prompt handling
+// PWA install prompt handling (header button removed)
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   beforeInstallPromptEvent = e;
-  installBtn.hidden = false;
-});
-
-installBtn.addEventListener('click', async () => {
-  if (!beforeInstallPromptEvent) return;
-  installBtn.hidden = true;
-  beforeInstallPromptEvent.prompt();
-  await beforeInstallPromptEvent.userChoice;
-  beforeInstallPromptEvent = null;
 });
 
 // Service worker registration (通知なし)
@@ -224,7 +219,7 @@ renderTime();
 // Show app version if available
 try {
   const v = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : undefined;
-  if (v && versionBadge) versionBadge.textContent = v;
+  if (v && versionBadgeFloat) versionBadgeFloat.textContent = v;
 } catch {}
 
 // Haptics (vibrate or pseudo via Web Audio)
