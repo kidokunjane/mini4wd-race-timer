@@ -10,6 +10,11 @@ const backBtn = document.getElementById('backBtn');
 const videoEl = document.getElementById('video');
 const playPauseBtn = document.getElementById('playPauseBtn');
 const restartBtn = document.getElementById('restartBtn');
+const seekBar = document.getElementById('seekBar');
+const videoWrap = document.querySelector('.video-wrap');
+const videoControls = document.querySelector('.video-controls');
+const appHeader = document.querySelector('.app-header');
+const mainEl = document.querySelector('main');
 const timeDisplay = document.getElementById('timeDisplay');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
@@ -102,6 +107,8 @@ function switchView(view) {
   if (view === 'player') {
     selectView.classList.remove('active');
     playerView.classList.add('active');
+    // レイアウトを更新
+    requestAnimationFrame(resizeVideoArea);
   } else {
     playerView.classList.remove('active');
     selectView.classList.add('active');
@@ -123,6 +130,48 @@ restartBtn.addEventListener('click', async () => {
   videoEl.currentTime = 0;
   try { await videoEl.play(); } catch {}
 });
+
+// Seek bar
+function setupSeekbarBindings() {
+  // 動画の長さがわかったら最大値を設定
+  videoEl.addEventListener('loadedmetadata', () => {
+    if (isFinite(videoEl.duration)) {
+      seekBar.max = String(videoEl.duration);
+    }
+  });
+
+  // 再生位置の更新に追従
+  videoEl.addEventListener('timeupdate', () => {
+    if (!isNaN(videoEl.currentTime)) {
+      seekBar.value = String(videoEl.currentTime);
+    }
+  });
+
+  // ユーザー操作でシーク
+  seekBar.addEventListener('input', () => {
+    const t = Number(seekBar.value);
+    if (!Number.isNaN(t)) videoEl.currentTime = t;
+  });
+}
+
+setupSeekbarBindings();
+
+// ビデオ領域を可能な限り大きくする（ヘッダー/コントロール/セーフエリアを考慮）
+function resizeVideoArea() {
+  if (!playerView.classList.contains('active')) return;
+  const mainStyles = getComputedStyle(mainEl);
+  const pt = parseFloat(mainStyles.paddingTop) || 0;
+  const pb = parseFloat(mainStyles.paddingBottom) || 0;
+  const controlsH = videoControls.offsetHeight || 0;
+  const headerH = appHeader.offsetHeight || 0;
+  const vh = window.innerHeight;
+  const margins = 8; // .video-controls margin-top
+  const available = Math.max(240, vh - headerH - pt - pb - controlsH - margins);
+  videoWrap.style.height = available + 'px';
+}
+
+window.addEventListener('resize', resizeVideoArea);
+window.addEventListener('orientationchange', resizeVideoArea);
 
 // Stopwatch controls
 startBtn.addEventListener('click', () => {

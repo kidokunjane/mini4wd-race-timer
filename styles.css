@@ -55,10 +55,17 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .player { display: grid; gap: 16px; }
 .video-wrap { position: relative; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-video { width: 100%; height: auto; display: block; background: #000; }
+/* できるだけ広く表示するため、コンテナの高さにフィット */
+video { width: 100%; height: 100%; display: block; background: #000; object-fit: contain; }
 .control { background: rgba(37, 99, 235, 0.95); color: white; border: 1px solid rgba(0,0,0,0.05); }
 
-.video-controls { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+.video-controls { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 8px; margin-top: 8px; }
+.video-controls .seek { width: 100%; }
+
+/* iOSのレンジ入力の見た目を少し改善（最低限） */
+input[type="range"].seek { -webkit-appearance: none; height: 4px; background: var(--border); border-radius: 999px; }
+input[type="range"].seek::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--primary); border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.05); }
+input[type="range"].seek::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--primary); border: 2px solid #fff; }
 
 .stopwatch { display: grid; gap: 10px; justify-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
 .time { font-variant-numeric: tabular-nums; font-size: 40px; letter-spacing: 1px; }
