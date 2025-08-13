@@ -17,7 +17,8 @@ const APP_SHELL = ASSETS.map((p) => new URL(`./${p}`, self.location).toString())
 const INDEX_URL = new URL('./index.html', self.location).toString();
 
 self.addEventListener('install', (event) => {
-  // Do not call skipWaiting here; wait for user consent
+  // Apply update immediately without prompt
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );

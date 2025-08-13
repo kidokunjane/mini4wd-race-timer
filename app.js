@@ -12,7 +12,7 @@ const playPauseBtn = document.getElementById('playPauseBtn');
 const restartBtn = document.getElementById('restartBtn');
 const seekBar = document.getElementById('seekBar');
 const videoWrap = document.querySelector('.video-wrap');
-const videoControls = document.querySelector('.video-controls');
+const videoSeekContainer = document.querySelector('.video-seek');
 const appHeader = document.querySelector('.app-header');
 const mainEl = document.querySelector('main');
 const timeDisplay = document.getElementById('timeDisplay');
@@ -163,7 +163,7 @@ function resizeVideoArea() {
   const mainStyles = getComputedStyle(mainEl);
   const pt = parseFloat(mainStyles.paddingTop) || 0;
   const pb = parseFloat(mainStyles.paddingBottom) || 0;
-  const controlsH = videoControls.offsetHeight || 0;
+  const controlsH = (videoSeekContainer && videoSeekContainer.offsetHeight) || 0;
   const headerH = appHeader.offsetHeight || 0;
   const vh = window.innerHeight;
   const margins = 8; // .video-controls margin-top
@@ -206,56 +206,10 @@ installBtn.addEventListener('click', async () => {
   beforeInstallPromptEvent = null;
 });
 
-// Service worker registration with update notification
+// Service worker registration (通知なし)
 if ('serviceWorker' in navigator) {
-  const updateToast = document.getElementById('updateToast');
-  const reloadBtn = document.getElementById('reloadBtn');
-  const dismissUpdateBtn = document.getElementById('dismissUpdateBtn');
-
-  function showUpdateToast() { if (updateToast) updateToast.hidden = false; }
-  function hideUpdateToast() { if (updateToast) updateToast.hidden = true; }
-
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').then((reg) => {
-      // Show prompt only when a new worker is waiting
-      function promptUpdate() {
-        if (reg.waiting) showUpdateToast();
-      }
-
-      if (reg.waiting && navigator.serviceWorker.controller) {
-        showUpdateToast();
-      }
-
-      reg.addEventListener('updatefound', () => {
-        const sw = reg.installing;
-        if (!sw) return;
-        sw.addEventListener('statechange', () => {
-          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-            // New SW installed, waiting for activation → ask user
-            promptUpdate();
-          }
-        });
-      });
-
-      let shouldReloadOnControllerChange = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!shouldReloadOnControllerChange) return;
-        // New SW took control after user accepted update
-        window.location.reload();
-      });
-
-      reloadBtn?.addEventListener('click', () => {
-        // Tell the waiting SW to activate immediately
-        if (reg.waiting) {
-          shouldReloadOnControllerChange = true;
-          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-        } else {
-          // Fallback: no waiting worker; just reload
-          window.location.reload();
-        }
-      });
-      dismissUpdateBtn?.addEventListener('click', () => hideUpdateToast());
-    }).catch(() => {});
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
   });
 }
 

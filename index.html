@@ -37,36 +37,34 @@
       <!-- Player View -->
       <section id="player-view" class="view">
         <div class="player">
-          <div class="video-wrap">
-            <video id="video" playsinline></video>
-          </div>
-          <div class="video-controls">
-            <button id="playPauseBtn" class="control primary">再生/一時停止</button>
-            <button id="restartBtn" class="control ghost-contrast">最初から再生</button>
-            <input id="seekBar" class="seek" type="range" min="0" value="0" step="0.01" aria-label="シークバー" />
-          </div>
-          <div class="stopwatch">
-            <div id="timeDisplay" class="time">00:00.000</div>
-            <div class="actions">
-              <button id="startBtn" class="success">開始</button>
-              <button id="stopBtn" class="danger" disabled>終了</button>
-              <button id="resetBtn" class="ghost" disabled>リセット</button>
+          <div class="left-pane">
+            <div class="video-wrap">
+              <video id="video" playsinline></video>
+            </div>
+            <div class="video-seek">
+              <input id="seekBar" class="seek" type="range" min="0" value="0" step="0.01" aria-label="シークバー" />
             </div>
           </div>
-          <div class="nav">
-            <button id="backBtn" class="ghost">戻る</button>
+          <div class="right-pane">
+            <div class="control-buttons">
+              <button id="playPauseBtn" class="control primary">再生/一時停止</button>
+              <button id="restartBtn" class="control ghost-contrast">最初から再生</button>
+            </div>
+            <div class="stopwatch">
+              <div id="timeDisplay" class="time">00:00.000</div>
+              <div class="actions">
+                <button id="startBtn" class="success">開始</button>
+                <button id="stopBtn" class="danger" disabled>終了</button>
+                <button id="resetBtn" class="ghost" disabled>リセット</button>
+              </div>
+            </div>
+            <div class="nav">
+              <button id="backBtn" class="ghost">戻る</button>
+            </div>
           </div>
         </div>
       </section>
     </main>
-
-    <div id="updateToast" class="toast" hidden>
-      <span>新しいバージョンがあります。</span>
-      <div class="toast-actions">
-        <button id="reloadBtn" class="primary">再読み込み</button>
-        <button id="dismissUpdateBtn" class="ghost">後で</button>
-      </div>
-    </div>
 
     <script src="app-version.js"></script>
     <script type="module" src="app.js"></script>
