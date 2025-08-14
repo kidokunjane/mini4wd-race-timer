@@ -104,11 +104,14 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
 
 /* Landscape device orientation: two-column layout with sticky right pane */
 @media (orientation: landscape) {
+  html, body { height: 100%; overflow: hidden; }
+  main { height: 100dvh; padding-top: calc(8px + env(safe-area-inset-top)); padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .player { height: 100%; }
   .player { grid-template-columns: minmax(0, 6fr) minmax(0, 4fr); align-items: start; gap: 16px; }
   .left-pane { grid-template-rows: 1fr auto; min-width: 0; }
   .right-pane {
-    position: sticky; top: calc(12px + env(safe-area-inset-top)); align-self: start;
-    max-height: calc(100dvh - (12px + env(safe-area-inset-top)) - (12px + env(safe-area-inset-bottom)));
+    position: sticky; top: calc(8px + env(safe-area-inset-top)); align-self: start;
+    max-height: calc(100dvh - (8px + env(safe-area-inset-top)) - (8px + env(safe-area-inset-bottom)));
     overflow-y: auto; overflow-x: hidden; display: grid; gap: 12px; grid-auto-rows: min-content; width: 100%;
   }
   /* Left video fills remaining height; drop fixed aspect-ratio and cap */
