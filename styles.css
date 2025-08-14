@@ -113,6 +113,13 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
 .auto-advanced { margin-top: 6px; }
 .auto-advanced > summary { cursor: pointer; color: var(--muted); }
 
+/* Detection level meter */
+.level { display: grid; gap: 6px; }
+.level-top { display: flex; align-items: center; justify-content: space-between; }
+.level-bar { position: relative; height: 10px; border: 1px solid var(--border); border-radius: 999px; background: #f3f4f6; overflow: hidden; }
+#levelBar { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, #60a5fa, #2563eb); }
+#levelThresh { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger); opacity: 0.9; }
+
 /* フローティング バージョンバッジ */
 /* remove floating version badge as header shows version */
 

@@ -163,6 +163,9 @@ const threshValueEl = document.getElementById('autoThreshValue');
 const holdValueEl = document.getElementById('autoHoldValue');
 const sensInput = document.getElementById('autoSens');
 const sensValueEl = document.getElementById('autoSensValue');
+const levelBar = document.getElementById('levelBar');
+const levelValue = document.getElementById('levelValue');
+const levelThresh = document.getElementById('levelThresh');
 const KEY_FREQ = 'autoFreqHz';
 const KEY_THRESH = 'autoThreshDb';
 const KEY_HOLD = 'autoHoldMs';
@@ -197,6 +200,8 @@ function renderAutoTuneUI() {
   if (holdValueEl) holdValueEl.textContent = `(${holdMs} ms)`;
   if (sensInput) sensInput.value = String(sensLevel);
   if (sensValueEl) sensValueEl.textContent = labelForSens(sensLevel);
+  // threshold marker位置
+  updateThresholdMarker();
 }
 renderAutoTuneUI();
 
@@ -229,11 +234,11 @@ let bandpass = null;
 let analyser = null;
 let freqData = null;
 let monitorRaf = 0;
+let meterRaf = 0;
 let aboveSince = 0;
 let autoStartFired = false;
 
-function setupAudioAnalysisGraph() {
-  if (!isAutoEnabled()) return;
+function ensureAnalyzerGraph() {
   ensureAudioContext();
   if (!audioCtx) return;
   if (!mediaSource) {
@@ -290,13 +295,50 @@ function stopBuzzerMonitor() {
   cancelAnimationFrame(monitorRaf);
 }
 
+// Level meter loop (常にUI更新用、オフでも可)
+function dbToPercent(db) {
+  // Map [-90 .. -20] dB => [0 .. 100]
+  const clamped = Math.max(-90, Math.min(-20, db));
+  return ((clamped + 90) / 70) * 100;
+}
+function updateThresholdMarker() {
+  if (!levelThresh) return;
+  const p = dbToPercent(thresholdDb);
+  levelThresh.style.left = `${p}%`;
+}
+function updateMeter(db) {
+  if (levelBar) levelBar.style.width = `${dbToPercent(db)}%`;
+  if (levelValue) levelValue.textContent = Number.isFinite(db) ? `${Math.round(db)} dB` : '';
+}
+function startMeterLoop() {
+  ensureAudioContext();
+  if (!audioCtx) return;
+  if (!analyser) ensureAnalyzerGraph();
+  cancelAnimationFrame(meterRaf);
+  const loop = () => {
+    if (analyser) {
+      analyser.getFloatFrequencyData(freqData);
+      const sr = audioCtx.sampleRate || 48000;
+      const binHz = sr / analyser.fftSize;
+      const targetBin = Math.max(0, Math.min(analyser.frequencyBinCount - 1, Math.round(buzzerFreq / binHz)));
+      const db = freqData ? freqData[targetBin] : -90;
+      updateMeter(db);
+    }
+    meterRaf = requestAnimationFrame(loop);
+  };
+  meterRaf = requestAnimationFrame(loop);
+}
+function stopMeterLoop() { cancelAnimationFrame(meterRaf); }
+
 videoEl.addEventListener('play', () => {
-  if (!isAutoEnabled()) return;
-  setupAudioAnalysisGraph();
-  startBuzzerMonitor();
+  ensureAnalyzerGraph();
+  startMeterLoop();
+  if (isAutoEnabled()) startBuzzerMonitor();
 });
 videoEl.addEventListener('pause', stopBuzzerMonitor);
 videoEl.addEventListener('ended', stopBuzzerMonitor);
+videoEl.addEventListener('pause', stopMeterLoop);
+videoEl.addEventListener('ended', stopMeterLoop);
 videoEl.addEventListener('loadedmetadata', () => {
   autoStartFired = false;
 });

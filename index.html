@@ -53,6 +53,16 @@
               <input id="autoSens" type="range" min="1" max="5" step="1" />
               <small class="muted">低 ← 1 2 3 4 5 → 高（誤検出が多い場合は小さく）</small>
             </div>
+            <div class="level">
+              <div class="level-top">
+                <span>検出レベル</span>
+                <span id="levelValue" class="muted"></span>
+              </div>
+              <div class="level-bar" id="levelBarWrap">
+                <div id="levelBar"></div>
+                <div id="levelThresh"></div>
+              </div>
+            </div>
             <details class="auto-advanced">
               <summary>詳細設定（必要な場合のみ）</summary>
               <div class="auto-tune">
