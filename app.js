@@ -6,7 +6,6 @@ const playerView = document.getElementById('player-view');
 const videoInput = document.getElementById('videoInput');
 const videoEl = document.getElementById('video');
 const playPauseBtn = document.getElementById('playPauseBtn');
-const restartBtn = document.getElementById('restartBtn');
 const seekBar = document.getElementById('seekBar');
 const videoWrap = document.querySelector('.video-wrap');
 const videoSeekContainer = document.querySelector('.video-seek');
@@ -109,13 +108,7 @@ playPauseBtn.addEventListener('click', async () => {
   }
 });
 
-restartBtn.addEventListener('click', async () => {
-  if (!videoEl.src) return;
-  try { videoEl.pause(); } catch {}
-  videoEl.currentTime = 0;
-  try { await videoEl.play(); } catch {}
-  hapticFeedback('restart');
-});
+// Removed restart button
 
 // Seek bar
 function setupSeekbarBindings() {
@@ -272,9 +265,6 @@ function hapticFeedback(kind) {
       break;
     case 'stop':
       haptic([50, 40, 50]); // double pulse
-      break;
-    case 'restart':
-      haptic([30, 30, 30]);
       break;
     case 'reset':
       haptic(20);
