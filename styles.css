@@ -93,7 +93,7 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
 /* Portrait-first layout: stack vertically */
 .player { grid-template-columns: 1fr; }
 .left-pane { grid-template-rows: auto auto; }
-.video-wrap { height: 42vh; }
+.video-wrap { height: auto; aspect-ratio: 16 / 9; }
 .right-pane { display: grid; gap: 12px; }
 .control-buttons { display: grid; grid-template-columns: 1fr; gap: 10px; }
 .control-buttons button, .stopwatch, .nav, .picker { width: 100%; min-width: 0; }

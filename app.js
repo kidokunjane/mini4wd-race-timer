@@ -142,15 +142,8 @@ setupSeekbarBindings();
 // ビデオ領域を可能な限り大きくする（ヘッダー/コントロール/セーフエリアを考慮）
 function resizeVideoArea() {
   if (!playerView.classList.contains('active')) return;
-  const mainStyles = getComputedStyle(mainEl);
-  const pt = parseFloat(mainStyles.paddingTop) || 0;
-  const pb = parseFloat(mainStyles.paddingBottom) || 0;
-  const controlsH = (videoSeekContainer && videoSeekContainer.offsetHeight) || 0;
-  const headerH = appHeader ? (appHeader.offsetHeight || 0) : 0;
-  const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-  const margins = 8; // .video-controls margin-top
-  const available = Math.max(240, vh - headerH - pt - pb - controlsH - margins);
-  videoWrap.style.height = available + 'px';
+  // CSSのaspect-ratioに任せるため高さ指定をクリア
+  videoWrap.style.height = '';
 }
 
 window.addEventListener('resize', resizeVideoArea);
