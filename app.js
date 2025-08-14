@@ -17,7 +17,7 @@ const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
 const installBtn = document.getElementById('installBtn');
-const versionBadgeFloat = document.getElementById('versionBadgeFloat');
+const versionBadge = document.getElementById('versionBadge');
 // Haptics elements removed (always ON)
 // placeholder UI removed
 // iOS判定と擬似ハプティクス用トグル
@@ -97,8 +97,7 @@ if (videoInput) {
 
 // Placeholder removed
 
-// Single-view mode: ensure player layout
-document.body.classList.add('player-mode');
+// Single-view mode: ensure layout sizing
 requestAnimationFrame(resizeVideoArea);
 
 // Video controls
@@ -115,7 +114,6 @@ restartBtn.addEventListener('click', async () => {
   try { videoEl.pause(); } catch {}
   videoEl.currentTime = 0;
   try { await videoEl.play(); } catch {}
-  tryLockLandscape();
   hapticFeedback('restart');
 });
 
@@ -172,7 +170,6 @@ startBtn.addEventListener('click', () => {
     videoEl.play().catch(() => {});
   }
   startTimer();
-  tryLockLandscape();
 });
 
 stopBtn.addEventListener('click', () => {
@@ -184,16 +181,7 @@ resetBtn.addEventListener('click', () => {
   hapticFeedback('reset');
 });
 
-// 可能なら横画面にロック（ユーザー操作起点で呼び出すと成功しやすい）
-async function tryLockLandscape() {
-  const api = screen.orientation && screen.orientation.lock;
-  if (!api) return; // 非対応（iOS Safari等）は何もしない
-  try {
-    await screen.orientation.lock('landscape');
-  } catch (_) {
-    // フルスクリーンが必要な環境や権限不足では失敗することがあります
-  }
-}
+// Orientation lock removed (portrait-first UI)
 
 // PWA install prompt handling (header button removed)
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -214,7 +202,7 @@ renderTime();
 // Show app version if available
 try {
   const v = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : undefined;
-  if (v && versionBadgeFloat) versionBadgeFloat.textContent = v;
+  if (v && versionBadge) versionBadge.textContent = v;
 } catch {}
 
 // Haptics (vibrate or pseudo via Web Audio)
