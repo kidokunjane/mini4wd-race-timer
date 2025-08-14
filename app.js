@@ -330,15 +330,8 @@ function startMeterLoop() {
 }
 function stopMeterLoop() { cancelAnimationFrame(meterRaf); }
 
-videoEl.addEventListener('play', () => {
-  ensureAnalyzerGraph();
-  startMeterLoop();
-  if (isAutoEnabled()) startBuzzerMonitor();
-});
-videoEl.addEventListener('pause', stopBuzzerMonitor);
-videoEl.addEventListener('ended', stopBuzzerMonitor);
-videoEl.addEventListener('pause', stopMeterLoop);
-videoEl.addEventListener('ended', stopMeterLoop);
+// Auto-start & meter removed
+videoEl.addEventListener('play', () => {});
 videoEl.addEventListener('loadedmetadata', () => {
   autoStartFired = false;
 });

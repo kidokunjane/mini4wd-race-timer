@@ -41,45 +41,7 @@
             <div class="control-buttons">
               <button id="playPauseBtn" class="control primary">再生/一時停止</button>
             </div>
-            <div class="auto-start">
-              <label class="a-switch">
-                <input type="checkbox" id="autoStartToggle" />
-                <span>自動開始（ブザー検出）</span>
-              </label>
-              <small class="muted">ブザー音を検出すると開始します</small>
-            </div>
-            <div class="auto-sens">
-              <label for="autoSens">感度 <small class="muted" id="autoSensValue"></small></label>
-              <input id="autoSens" type="range" min="1" max="5" step="1" />
-              <small class="muted">低 ← 1 2 3 4 5 → 高（誤検出が多い場合は小さく）</small>
-            </div>
-            <div class="level">
-              <div class="level-top">
-                <span>検出レベル</span>
-                <span id="levelValue" class="muted"></span>
-              </div>
-              <div class="level-bar" id="levelBarWrap">
-                <div id="levelBar"></div>
-                <div id="levelThresh"></div>
-              </div>
-            </div>
-            <details class="auto-advanced">
-              <summary>詳細設定（必要な場合のみ）</summary>
-              <div class="auto-tune">
-                <div class="row">
-                  <label for="autoFreq">周波数(Hz)</label>
-                  <input id="autoFreq" type="number" min="200" max="8000" step="10" />
-                </div>
-                <div class="row">
-                  <label for="autoThresh">しきい値(dB) <small class="muted" id="autoThreshValue"></small></label>
-                  <input id="autoThresh" type="range" min="-90" max="-20" step="1" />
-                </div>
-                <div class="row">
-                  <label for="autoHold">継続時間(ms) <small class="muted" id="autoHoldValue"></small></label>
-                  <input id="autoHold" type="range" min="20" max="300" step="10" />
-                </div>
-              </div>
-            </details>
+            
             <div class="stopwatch">
               <div id="timeDisplay" class="time">00:00.000</div>
               <div class="actions">
