@@ -139,6 +139,231 @@ function setupSeekbarBindings() {
 
 setupSeekbarBindings();
 
+// ===== ブザー検出で自動スタート =====
+// 設定（必要に応じて調整）
+const autoStartToggle = document.getElementById('autoStartToggle');
+const AUTO_START_KEY = 'autoStartEnabled';
+let autoStartEnabled = false; // デフォルトOFF
+try {
+  const saved = localStorage.getItem(AUTO_START_KEY);
+  autoStartEnabled = saved ? saved === 'true' : false;
+  if (autoStartToggle) autoStartToggle.checked = autoStartEnabled;
+} catch {}
+function isAutoEnabled() { return !!autoStartEnabled; }
+// デフォルト感度
+const DEF_FREQ = 2500; // Hz
+const DEF_THRESH = -45; // dB
+const DEF_HOLD = 80; // ms
+
+// UIと保存
+const freqInput = document.getElementById('autoFreq');
+const threshInput = document.getElementById('autoThresh');
+const holdInput = document.getElementById('autoHold');
+const threshValueEl = document.getElementById('autoThreshValue');
+const holdValueEl = document.getElementById('autoHoldValue');
+const sensInput = document.getElementById('autoSens');
+const sensValueEl = document.getElementById('autoSensValue');
+const KEY_FREQ = 'autoFreqHz';
+const KEY_THRESH = 'autoThreshDb';
+const KEY_HOLD = 'autoHoldMs';
+const KEY_SENS = 'autoSensLevel';
+
+let buzzerFreq = DEF_FREQ;
+let thresholdDb = DEF_THRESH;
+let holdMs = DEF_HOLD;
+let sensLevel = 3; // 1..5
+
+try {
+  const savedF = Number(localStorage.getItem(KEY_FREQ));
+  const savedT = Number(localStorage.getItem(KEY_THRESH));
+  const savedH = Number(localStorage.getItem(KEY_HOLD));
+  const savedS = Number(localStorage.getItem(KEY_SENS));
+  if (!Number.isNaN(savedF) && savedF >= 200 && savedF <= 8000) buzzerFreq = savedF;
+  if (!Number.isNaN(savedT) && savedT <= -20 && savedT >= -90) thresholdDb = savedT;
+  if (!Number.isNaN(savedH) && savedH >= 20 && savedH <= 300) holdMs = savedH;
+  if (!Number.isNaN(savedS) && savedS >= 1 && savedS <= 5) {
+    sensLevel = savedS;
+    const p = paramsForSens(sensLevel);
+    thresholdDb = p.thresh;
+    holdMs = p.hold;
+  }
+} catch {}
+
+function renderAutoTuneUI() {
+  if (freqInput) freqInput.value = String(buzzerFreq);
+  if (threshInput) threshInput.value = String(thresholdDb);
+  if (holdInput) holdInput.value = String(holdMs);
+  if (threshValueEl) threshValueEl.textContent = `(${thresholdDb} dB)`;
+  if (holdValueEl) holdValueEl.textContent = `(${holdMs} ms)`;
+  if (sensInput) sensInput.value = String(sensLevel);
+  if (sensValueEl) sensValueEl.textContent = labelForSens(sensLevel);
+}
+renderAutoTuneUI();
+
+// Sensitivity mapping (1=低, 5=高)
+function paramsForSens(level) {
+  const map = {
+    1: { thresh: -35, hold: 150 },
+    2: { thresh: -40, hold: 120 },
+    3: { thresh: -45, hold: 80 },
+    4: { thresh: -50, hold: 60 },
+    5: { thresh: -55, hold: 50 }
+  };
+  return map[level] || map[3];
+}
+function labelForSens(level) {
+  return ({1: '低', 2: 'やや低', 3: '標準', 4: 'やや高', 5: '高'}[level]) || '標準';
+}
+
+let audioCtx = null; // 既存のWeb Audio（擬似ハプティクス）と共有
+function ensureAudioContext() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+let mediaSource = null;
+let bandpass = null;
+let analyser = null;
+let freqData = null;
+let monitorRaf = 0;
+let aboveSince = 0;
+let autoStartFired = false;
+
+function setupAudioAnalysisGraph() {
+  if (!isAutoEnabled()) return;
+  ensureAudioContext();
+  if (!audioCtx) return;
+  if (!mediaSource) {
+    mediaSource = audioCtx.createMediaElementSource(videoEl);
+  }
+  if (!bandpass) {
+    bandpass = audioCtx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = buzzerFreq;
+    bandpass.Q.value = 10; // 絞り込み
+  }
+  if (!analyser) {
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.2;
+    freqData = new Float32Array(analyser.frequencyBinCount);
+  }
+  // 接続（destinationへは繋がない）
+  try {
+    mediaSource.disconnect();
+  } catch {}
+  mediaSource.connect(bandpass);
+  try { bandpass.disconnect(); } catch {}
+  bandpass.connect(analyser);
+}
+
+function startBuzzerMonitor() {
+  if (!isAutoEnabled() || !analyser || !audioCtx) return;
+  const sr = audioCtx.sampleRate || 48000;
+  const binHz = sr / analyser.fftSize; // 実質 (sampleRate / fftSize)
+  let targetBin = Math.max(0, Math.min(analyser.frequencyBinCount - 1, Math.round(buzzerFreq / binHz)));
+  aboveSince = 0;
+  cancelAnimationFrame(monitorRaf);
+
+  const tick = (t) => {
+    analyser.getFloatFrequencyData(freqData);
+    const levelDb = freqData[targetBin];
+    if (levelDb >= thresholdDb) {
+      if (aboveSince === 0) aboveSince = performance.now();
+      const dur = performance.now() - aboveSince;
+      if (!autoStartFired && !isRunning && dur >= holdMs) {
+        autoStartFired = true;
+        startTimer();
+      }
+    } else {
+      aboveSince = 0;
+    }
+    monitorRaf = requestAnimationFrame(tick);
+  };
+  monitorRaf = requestAnimationFrame(tick);
+}
+
+function stopBuzzerMonitor() {
+  cancelAnimationFrame(monitorRaf);
+}
+
+videoEl.addEventListener('play', () => {
+  if (!isAutoEnabled()) return;
+  setupAudioAnalysisGraph();
+  startBuzzerMonitor();
+});
+videoEl.addEventListener('pause', stopBuzzerMonitor);
+videoEl.addEventListener('ended', stopBuzzerMonitor);
+videoEl.addEventListener('loadedmetadata', () => {
+  autoStartFired = false;
+});
+
+// Toggle handlers
+autoStartToggle?.addEventListener('change', () => {
+  autoStartEnabled = !!autoStartToggle.checked;
+  try { localStorage.setItem(AUTO_START_KEY, autoStartEnabled ? 'true' : 'false'); } catch {}
+  if (autoStartEnabled) {
+    // 有効化時、再生中なら監視を開始
+    if (!audioCtx || audioCtx.state === 'suspended') ensureAudioContext();
+    setupAudioAnalysisGraph();
+    if (!videoEl.paused) startBuzzerMonitor();
+  } else {
+    stopBuzzerMonitor();
+  }
+});
+
+// Sensitivity change handlers
+function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+function restartMonitorIfRunning() {
+  if (autoStartEnabled && !videoEl.paused) {
+    stopBuzzerMonitor();
+    setupAudioAnalysisGraph();
+    startBuzzerMonitor();
+  }
+}
+
+freqInput?.addEventListener('change', () => {
+  const v = clamp(Number(freqInput.value), 200, 8000);
+  if (!Number.isNaN(v)) {
+    buzzerFreq = v;
+    try { localStorage.setItem(KEY_FREQ, String(v)); } catch {}
+    if (bandpass) bandpass.frequency.value = buzzerFreq;
+    restartMonitorIfRunning();
+  }
+});
+
+threshInput?.addEventListener('input', () => {
+  const v = clamp(Number(threshInput.value), -90, -20);
+  if (!Number.isNaN(v)) {
+    thresholdDb = v;
+    try { localStorage.setItem(KEY_THRESH, String(v)); } catch {}
+    renderAutoTuneUI();
+  }
+});
+
+holdInput?.addEventListener('input', () => {
+  const v = clamp(Number(holdInput.value), 20, 300);
+  if (!Number.isNaN(v)) {
+    holdMs = v;
+    try { localStorage.setItem(KEY_HOLD, String(v)); } catch {}
+    renderAutoTuneUI();
+  }
+});
+
+sensInput?.addEventListener('input', () => {
+  const lvl = clamp(Number(sensInput.value), 1, 5);
+  sensLevel = lvl;
+  const p = paramsForSens(lvl);
+  thresholdDb = p.thresh;
+  holdMs = p.hold;
+  try { localStorage.setItem(KEY_SENS, String(lvl)); } catch {}
+  renderAutoTuneUI();
+  restartMonitorIfRunning();
+});
+
 // ビデオ領域を可能な限り大きくする（ヘッダー/コントロール/セーフエリアを考慮）
 function resizeVideoArea() {
   if (!playerView.classList.contains('active')) return;
@@ -191,16 +416,8 @@ try {
   if (v && versionBadge) versionBadge.textContent = v;
 } catch {}
 
-// Haptics (vibrate or pseudo via Web Audio)
+// Haptics (vibrate or pseudo via Web Audio) — audioCtx を共有
 const canVibrate = 'vibrate' in navigator;
-let audioCtx = null;
-function ensureAudioContext() {
-  if (!audioCtx) {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (AC) audioCtx = new AC();
-  }
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-}
 
 function buzz(durationMs = 30) {
   ensureAudioContext();

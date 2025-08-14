@@ -99,6 +99,20 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
 .control-buttons button, .stopwatch, .nav, .picker { width: 100%; min-width: 0; }
 .time { font-size: 48px; }
 
+/* Toggles */
+.auto-start { display: grid; gap: 6px; }
+.a-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.a-switch input { width: 18px; height: 18px; }
+
+/* Auto-start tuning */
+.auto-sens { display: grid; gap: 6px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+.auto-tune { display: grid; gap: 10px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+.auto-tune .row { display: grid; gap: 6px; }
+.auto-tune input[type="number"] { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.auto-tune input[type="range"] { width: 100%; }
+.auto-advanced { margin-top: 6px; }
+.auto-advanced > summary { cursor: pointer; color: var(--muted); }
+
 /* フローティング バージョンバッジ */
 /* remove floating version badge as header shows version */
 
