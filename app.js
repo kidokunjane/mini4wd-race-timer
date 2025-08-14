@@ -9,6 +9,8 @@ const playPauseBtn = document.getElementById('playPauseBtn');
 const seekBar = document.getElementById('seekBar');
 const videoWrap = document.querySelector('.video-wrap');
 const videoSeekContainer = document.querySelector('.video-seek');
+const controlButtonsEl = document.querySelector('.control-buttons');
+const stopwatchEl = document.querySelector('.stopwatch');
 const appHeader = document.querySelector('.app-header');
 const mainEl = document.querySelector('main');
 const timeDisplay = document.getElementById('timeDisplay');
@@ -128,6 +130,8 @@ function setupSeekbarBindings() {
       document.body.classList.toggle('video-portrait', ratio < 1);
       document.body.classList.toggle('video-landscape', ratio >= 1);
     }
+    // 初回の高さ調整
+    requestAnimationFrame(resizeVideoArea);
   });
 
   // 再生位置の更新に追従
@@ -415,6 +419,23 @@ function resizeVideoArea() {
   if (!playerView.classList.contains('active')) return;
   // CSSのaspect-ratioに任せるため高さ指定をクリア
   videoWrap.style.height = '';
+  videoWrap.style.maxHeight = '';
+
+  // 縦長動画のときは、下のUIが収まるように動画の最大高さを動的に制限
+  const isPortraitVideo = document.body.classList.contains('video-portrait');
+  if (isPortraitVideo) {
+    const mainStyles = getComputedStyle(mainEl);
+    const pt = parseFloat(mainStyles.paddingTop) || 0;
+    const pb = parseFloat(mainStyles.paddingBottom) || 0;
+    const headerH = appHeader ? (appHeader.offsetHeight || 0) : 0;
+    const seekH = (videoSeekContainer && videoSeekContainer.offsetHeight) || 0;
+    const controlsH = (controlButtonsEl && controlButtonsEl.offsetHeight) || 0;
+    const stopwatchH = (stopwatchEl && stopwatchEl.offsetHeight) || 0;
+    const gaps = 24; // おおよその余白
+    const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    const available = Math.max(120, vh - headerH - pt - pb - seekH - controlsH - stopwatchH - gaps);
+    videoWrap.style.maxHeight = `${available}px`;
+  }
 }
 
 window.addEventListener('resize', resizeVideoArea);

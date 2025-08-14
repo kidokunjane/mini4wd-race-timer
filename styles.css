@@ -95,7 +95,6 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
 .left-pane { grid-template-rows: auto auto; }
 .video-wrap { height: auto; aspect-ratio: 16 / 9; }
 /* 縦長動画のときは高さを制限して他UIを圧迫しない */
-.video-portrait .video-wrap { max-height: 60vh; }
 .video-landscape .video-wrap { max-height: none; }
 
 /* 縦長動画時は時間表示を少し小さくして収まりをよくする */
