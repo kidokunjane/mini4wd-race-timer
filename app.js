@@ -11,6 +11,10 @@ const videoWrap = document.querySelector('.video-wrap');
 const videoSeekContainer = document.querySelector('.video-seek');
 const controlButtonsEl = document.querySelector('.control-buttons');
 const stopwatchEl = document.querySelector('.stopwatch');
+const leftPane = document.querySelector('.left-pane');
+const seekSlot = document.getElementById('seekSlot');
+const controlButtonsEl = document.querySelector('.control-buttons');
+const stopwatchEl = document.querySelector('.stopwatch');
 const appHeader = document.querySelector('.app-header');
 const mainEl = document.querySelector('main');
 const timeDisplay = document.getElementById('timeDisplay');
@@ -423,7 +427,18 @@ function resizeVideoArea() {
 
   // 縦長動画のときは、下のUIが収まるように動画の最大高さを動的に制限
   const isPortraitVideo = document.body.classList.contains('video-portrait');
-  if (isPortraitVideo) {
+  const isLandscapeOrient = window.matchMedia('(orientation: landscape)').matches;
+
+  // シークバーを向きに応じて移動
+  if (videoSeekContainer && leftPane && seekSlot) {
+    if (isLandscapeOrient) {
+      if (videoSeekContainer.parentElement !== seekSlot) seekSlot.appendChild(videoSeekContainer);
+    } else {
+      if (videoSeekContainer.parentElement !== leftPane) leftPane.appendChild(videoSeekContainer);
+    }
+  }
+
+  if (isPortraitVideo && !isLandscapeOrient) {
     const mainStyles = getComputedStyle(mainEl);
     const pt = parseFloat(mainStyles.paddingTop) || 0;
     const pb = parseFloat(mainStyles.paddingBottom) || 0;

@@ -84,9 +84,7 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
 #startBtn, #stopBtn { font-size: 20px; padding: 16px 18px; min-height: 56px; }
 #resetBtn { font-size: 14px; padding: 10px 12px; }
 
-@media (max-width: 480px) and (orientation: portrait) {
-  .actions { grid-template-columns: 1fr; }
-}
+
 
 .nav { display: flex; justify-content: flex-end; }
 
@@ -99,10 +97,14 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
 
 /* 縦長動画時は時間表示を少し小さくして収まりをよくする */
 .video-portrait .time { font-size: 42px; }
+/* When landscape and video is portrait, give more width to video */
+@media (orientation: landscape) {
+  .video-portrait .player { grid-template-columns: minmax(0, 7fr) minmax(0, 3fr); }
+}
 
 /* Landscape device orientation: two-column layout with sticky right pane */
 @media (orientation: landscape) {
-  .player { grid-template-columns: minmax(0, 5fr) minmax(0, 3fr); align-items: start; gap: 16px; }
+  .player { grid-template-columns: minmax(0, 6fr) minmax(0, 4fr); align-items: start; gap: 16px; }
   .left-pane { grid-template-rows: 1fr auto; min-width: 0; }
   .right-pane {
     position: sticky; top: calc(12px + env(safe-area-inset-top)); align-self: start;
@@ -112,6 +114,12 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
   /* Left video fills remaining height; drop fixed aspect-ratio and cap */
   .video-wrap { height: 100%; aspect-ratio: auto; }
   .video-portrait .video-wrap { max-height: 100%; }
+  /* Move seek bar to right column */
+  .left-pane .video-seek { display: none; }
+  .seek-slot { display: block; }
+  /* Hide header to maximize space */
+  .app-header { display: none; }
+  main { padding-top: calc(8px + env(safe-area-inset-top)); }
   .control-buttons { display: grid; grid-template-columns: 1fr; gap: 10px; }
   .control-buttons button, .stopwatch, .nav, .picker { width: 100%; min-width: 0; }
   .time { font-size: 56px; }
