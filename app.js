@@ -117,6 +117,17 @@ function setupSeekbarBindings() {
     if (isFinite(videoEl.duration)) {
       seekBar.max = String(videoEl.duration);
     }
+    // 動画のアスペクト比に応じてUIを切替
+    const vw = videoEl.videoWidth || 16;
+    const vh = videoEl.videoHeight || 9;
+    const ratio = vw / vh;
+    if (ratio > 0) {
+      try {
+        videoWrap.style.aspectRatio = `${vw} / ${vh}`;
+      } catch {}
+      document.body.classList.toggle('video-portrait', ratio < 1);
+      document.body.classList.toggle('video-landscape', ratio >= 1);
+    }
   });
 
   // 再生位置の更新に追従

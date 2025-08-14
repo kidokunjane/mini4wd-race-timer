@@ -94,6 +94,29 @@ input[type="range"].seek::-moz-range-thumb { width: 20px; height: 20px; border-r
 .player { grid-template-columns: 1fr; }
 .left-pane { grid-template-rows: auto auto; }
 .video-wrap { height: auto; aspect-ratio: 16 / 9; }
+/* 縦長動画のときは高さを制限して他UIを圧迫しない */
+.video-portrait .video-wrap { max-height: 60vh; }
+.video-landscape .video-wrap { max-height: none; }
+
+/* 縦長動画時は時間表示を少し小さくして収まりをよくする */
+.video-portrait .time { font-size: 42px; }
+
+/* Landscape device orientation: two-column layout with sticky right pane */
+@media (orientation: landscape) {
+  .player { grid-template-columns: minmax(0, 5fr) minmax(0, 3fr); align-items: start; gap: 16px; }
+  .left-pane { grid-template-rows: 1fr auto; min-width: 0; }
+  .right-pane {
+    position: sticky; top: calc(12px + env(safe-area-inset-top)); align-self: start;
+    max-height: calc(100dvh - (12px + env(safe-area-inset-top)) - (12px + env(safe-area-inset-bottom)));
+    overflow-y: auto; overflow-x: hidden; display: grid; gap: 12px; grid-auto-rows: min-content; width: 100%;
+  }
+  /* Left video fills remaining height; drop fixed aspect-ratio and cap */
+  .video-wrap { height: 100%; aspect-ratio: auto; }
+  .video-portrait .video-wrap { max-height: 100%; }
+  .control-buttons { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .control-buttons button, .stopwatch, .nav, .picker { width: 100%; min-width: 0; }
+  .time { font-size: 56px; }
+}
 .right-pane { display: grid; gap: 12px; }
 .control-buttons { display: grid; grid-template-columns: 1fr; gap: 10px; }
 .control-buttons button, .stopwatch, .nav, .picker { width: 100%; min-width: 0; }
